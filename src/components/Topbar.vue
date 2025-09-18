@@ -3,7 +3,12 @@
 </script>
 
 <template>
-<h1>Topbar!!!</h1>
+  <body>
+  <main class="navbar">
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/SecondView">Second</RouterLink>
+  </main>
+  </body>
 </template>
 
 <style scoped>
