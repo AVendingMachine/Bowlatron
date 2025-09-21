@@ -7,6 +7,7 @@
   <main class="navbar">
     <RouterLink to="/">Home</RouterLink>
     <RouterLink to="/SecondView">Second</RouterLink>
+    <RouterLink to="/DatabaseWriterView">Database</RouterLink>
   </main>
   </body>
 </template>
