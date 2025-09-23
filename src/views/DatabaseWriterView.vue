@@ -1,10 +1,8 @@
 <script setup lang="ts">
 
-import {getAuthors} from "../composables/useDatabase.ts";
-
-console.log(getAuthors());
 
 </script>
+
 
 <template>
   <body>
