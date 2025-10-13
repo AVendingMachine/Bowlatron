@@ -5,7 +5,7 @@ import Database from '@tauri-apps/plugin-sql'
  * and returns the loaded database
  */
 export async function loadMainDatabase(): Promise<Database> {
-    return await Database.load("sqlite:main.db")
+    return await Database.load("sqlite:test.db")
 }
 
 /**
@@ -25,4 +25,13 @@ export function addAuthor(db: Database, name: string): void {
 export async function getAuthorNameByID(db: Database, id: number): Promise<string> {
     const selectedArray: { name: string }[] = await db.select("SELECT name FROM authors WHERE id = ?", [id])
     return selectedArray[0].name //Since the above returns an array with one object, we take that object's name
+}
+
+export async function getTableByName(db: Database, name: string): Promise<{
+    id: number,
+    name: string,
+    nationality: string
+}[]> {
+    return await db.select(`SELECT *
+                            FROM "${name}"`)
 }
