@@ -1,32 +1,53 @@
 import Database from '@tauri-apps/plugin-sql'
 
-interface Author {
-    name: string
-    nationality: string
-}
-
-
 /**
  * Loads the main.db SQLite database stored in appdata/roaming,
- * creates one if it doesn't exit already
+ * creates one if it doesn't exist already
  * @returns the loaded database object
  */
+
+const validNationalities: String[] = ["American", "German"]
+
 export async function loadMainDatabase(): Promise<Database> {
     const db = await Database.load("sqlite:main.db")
+    await db.execute(`PRAGMA foreign_keys = ON`);
     await db.execute(`CREATE TABLE IF NOT EXISTS authors
                       (
                           id          INTEGER PRIMARY KEY AUTOINCREMENT,
                           name        TEXT NOT NULL,
-                          nationality TEXT NOT NULL
+                          nationality TEXT NOT NULL,
+                          birth_year  INTEGER
                       )
     `)
     await db.execute(`CREATE TABLE IF NOT EXISTS works
                       (
-                          id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                          name      TEXT    NOT NULL,
-                          genre     TEXT    NOT NULL,
-                          author_id INTEGER NOT NULL,
+                          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                          title          TEXT    NOT NULL,
+                          genre          TEXT    NOT NULL,
+                          language       TEXT    NOT NULL,
+                          year_published INTEGER,
+                          author_id      INTEGER NOT NULL,
                           FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
+                      )
+    `)
+    await db.execute(`CREATE TABLE IF NOT EXISTS authors_questions
+                      (
+                          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                          difficulty TEXT    NOT NULL,
+                          content    TEXT    NOT NULL,
+                          audio_path TEXT    NOT NULL,
+                          author_id  INTEGER NOT NULL,
+                          FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
+                      )
+    `)
+    await db.execute(`CREATE TABLE IF NOT EXISTS works_questions
+                      (
+                          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                          difficulty TEXT    NOT NULL,
+                          content    TEXT    NOT NULL,
+                          audio_path TEXT    NOT NULL,
+                          work_id    INTEGER NOT NULL,
+                          FOREIGN KEY (work_id) REFERENCES works (id) ON DELETE CASCADE
                       )
     `)
     return db
@@ -55,11 +76,26 @@ export async function getTableByName(db: Database, name: string): Promise<{}[]> 
 }
 
 /**
- * Adds an author object specified to the given database's authors table
- * @param db the database to insert into
- * @param author the author object to be inserted
+ * Inserts an author with given parameters into authors table
+ * @param db database to insert into
+ * @param name the author's full name
+ * @param nationality the author's nationality
+ * @param birthYear author's year of birth if applicable (negative is BCE)
  */
-export async function addAuthor(db: Database, author: Author): Promise<void> {
-    await db.execute(`INSERT INTO authors (name, nationality)
-                      VALUES ("${author.name}", "${author.nationality}")`)
+export async function addAuthor(db: Database, name: String, nationality: String, birthYear: number): Promise<void> {
+    if (!validNationalities.includes(nationality)) {
+        throw new Error("Invalid nationality \"" + name + "\" provided when trying to add author")
+    } else if (isNaN(Number(birthYear))) {
+        throw new Error("Invalid birth year \"" + birthYear + "\" provided when trying to add author")
+    } else {
+        await db.execute(`INSERT INTO authors (name, nationality, birth_year)
+                          VALUES ("${name}", "${nationality}", "${birthYear}")`)
+    }
+
+}
+
+export async function updateAuthor(db: Database, id: number, fieldToChange: String, newValue: String | number): Promise<void> {
+    await db.execute(`UPDATE authors
+                      SET "${fieldToChange}" = "${newValue}"
+                      WHERE id = "${id}"`)
 }
