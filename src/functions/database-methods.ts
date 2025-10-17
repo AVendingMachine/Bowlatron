@@ -1,13 +1,18 @@
 import Database from '@tauri-apps/plugin-sql'
 
+const validNationalities: String[] = ["American", "German"]
+
+interface Author {
+    name: String
+    nationality: String
+    birthYear: number
+}
+
 /**
  * Loads the main.db SQLite database stored in appdata/roaming,
  * creates one if it doesn't exist already
  * @returns the loaded database object
  */
-
-const validNationalities: String[] = ["American", "German"]
-
 export async function loadMainDatabase(): Promise<Database> {
     const db = await Database.load("sqlite:main.db")
     await db.execute(`PRAGMA foreign_keys = ON`);
@@ -54,14 +59,15 @@ export async function loadMainDatabase(): Promise<Database> {
 }
 
 /**
- * Gets the name of a provided author by ID in provided database
- * @param db opened SQLite database with an authors table
- * @param id the ID (primary key) of desired author
- * @returns name of the author
+ * Returns the name field of an entry with the given id in a table
+ * @param db database containing table
+ * @param table table with field
+ * @param id the id field of the entry
  */
-export async function getAuthorNameByID(db: Database, id: number): Promise<string> {
-    const selectedArray: { name: string }[] = await db.select("SELECT name FROM authors WHERE id = ?", [id])
-    return selectedArray[0].name //Since the above returns an array with one object, we take that object's name
+export async function getNameByID(db: Database, table: string, id: number): Promise<string> {
+    return db.select(`SELECT name
+                      FROM "${table}"
+                      WHERE id = "${id}"`)
 }
 
 /**
@@ -76,26 +82,83 @@ export async function getTableByName(db: Database, name: string): Promise<{}[]> 
 }
 
 /**
- * Inserts an author with given parameters into authors table
- * @param db database to insert into
- * @param name the author's full name
- * @param nationality the author's nationality
- * @param birthYear author's year of birth if applicable (negative is BCE)
+ * Inserts a specific author into the given database
+ * @param db the opened database
+ * @param author the author object to be added
  */
-export async function addAuthor(db: Database, name: String, nationality: String, birthYear: number): Promise<void> {
-    if (!validNationalities.includes(nationality)) {
-        throw new Error("Invalid nationality \"" + name + "\" provided when trying to add author")
-    } else if (isNaN(Number(birthYear))) {
-        throw new Error("Invalid birth year \"" + birthYear + "\" provided when trying to add author")
+export async function addAuthor(db: Database, author: Author): Promise<void> {
+
+    if (!validNationalities.includes(author.nationality)) {
+        throw new Error("Invalid nationality \"" + author.nationality + "\" provided when trying to add author")
+    } else if (isNaN(Number(author.birthYear))) {
+        throw new Error("Invalid birth year \"" + author.birthYear + "\" provided when trying to add author")
     } else {
         await db.execute(`INSERT INTO authors (name, nationality, birth_year)
-                          VALUES ("${name}", "${nationality}", "${birthYear}")`)
+                          VALUES ("${author.name}", "${author.nationality}", "${author.birthYear}")`)
     }
 
 }
 
-export async function updateAuthor(db: Database, id: number, fieldToChange: String, newValue: String | number): Promise<void> {
-    await db.execute(`UPDATE authors
-                      SET "${fieldToChange}" = "${newValue}"
+/**
+ * Checks if a given table exists in given database
+ * @param db database to check
+ * @param table table name, case-sensitive
+ */
+async function isValidTable(db: Database, table: String): Promise<boolean> {
+    try {
+        await db.select(`SELECT *
+                         FROM "${table}"`)
+        return true;
+    } catch (error: any) {
+        return false;
+    }
+}
+
+/**
+ * Checks if a given table has a given column
+ * @param db database containing table
+ * @param table table to check
+ * @param field the name of the column
+ */
+async function isValidField(db: Database, table: String, field: String): Promise<boolean> {
+    try {
+        await db.select(`SELECT "${field}"
+                         FROM "${table}"`)
+        return true;
+    } catch (error: any) {
+        return false;
+    }
+}
+
+/**
+ * Updates a field on a given row of a given table of a database by ID
+ * @param db the database to use
+ * @param tableName the name of the table (authors, works, authors_questions, works_questions)
+ * @param id the id (primary key) of the row
+ * @param fieldToChange the field to be changed
+ * @param newValue the value to insert into the field
+ */
+export async function updateEntryByID(db: Database, tableName: String, id: number, fieldToChange: String, newValue: String | number): Promise<void> {
+    if (!(await isValidTable(db, tableName))) {
+        throw new Error("Cannot find table \"" + tableName + "\" in the database")
+    } else if (await isValidField(db, tableName, fieldToChange)) {
+        throw new Error("Cannot find field name \"" + fieldToChange + "\" in the database")
+    } else {
+        await db.execute(`UPDATE "${tableName}"
+                          SET "${fieldToChange}" = "${newValue}"
+                          WHERE id = "${id}"`)
+    }
+
+}
+
+/**
+ * Deletes a row given its id field in the given table
+ * @param db database containing table
+ * @param tableName name of table
+ * @param id id of row in table
+ */
+export async function deleteEntryByID(db: Database, tableName: String, id: number): Promise<void> {
+    await db.execute(`DELETE
+                      FROM "${tableName}"
                       WHERE id = "${id}"`)
 }
