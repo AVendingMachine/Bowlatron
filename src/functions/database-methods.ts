@@ -1,11 +1,21 @@
 import Database from '@tauri-apps/plugin-sql'
 
 const validNationalities: String[] = ["American", "German"]
+const validLanguages: string[] = ["English", "Spanish", "Italian"]
+const validGenres: string[] = ["Poetry", "Long-Fiction"]
 
 interface Author {
     name: String
     nationality: String
     birthYear: number
+}
+
+interface Work {
+    title: string
+    genre: string
+    language: string
+    yearPublished: number
+    author: string
 }
 
 /**
@@ -59,15 +69,33 @@ export async function loadMainDatabase(): Promise<Database> {
 }
 
 /**
- * Returns the name field of an entry with the given id in a table
- * @param db database containing table
- * @param table table with field
- * @param id the id field of the entry
+ * Returns the id of an entry where it is a field containing the specified value. eg. an author has a certain name
+ * @param db the database to search in
+ * @param table the table to search in
+ * @param field the field to check
+ * @param value the value to check the field for
+ * @returns the id of the entry
  */
-export async function getNameByID(db: Database, table: string, id: number): Promise<string> {
-    return db.select(`SELECT name
-                      FROM "${table}"
-                      WHERE id = "${id}"`)
+export async function getIDByFieldValue(db: Database, table: string, field: string, value: any): Promise<number> {
+    const selectedObject: [{ id: number }] = await db.select(`SELECT *
+                                                              FROM "${table}"
+                                                              WHERE "${field}" = "${value}"
+                                                              LIMIT 1`)
+    return selectedObject[0].id;
+}
+
+/**
+ * Checks if a given table has an entry with a value for the specified field
+ * @param db database to check
+ * @param table table to check
+ * @param field the field to check
+ * @param value the value to look for in field
+ */
+async function entryExists(db: Database, table: string, field: string, value: any): Promise<boolean> {
+    const selectedObject: [{}] = await db.select(`SELECT *
+                                                  FROM "${table}"
+                                                  WHERE "${field}" = "${value}" `);
+    return selectedObject.length > 0;
 }
 
 /**
@@ -100,6 +128,29 @@ export async function addAuthor(db: Database, author: Author): Promise<void> {
 }
 
 /**
+ * Adds the specified work to the "works" table
+ * @param db database to open
+ * @param work work to add
+ */
+export async function addWork(db: Database, work: Work): Promise<void> {
+    const authorExists: boolean = await entryExists(db, 'authors', 'name', work.author)
+    if (!validLanguages.includes(work.language)) {
+        throw new Error("Invalid language \"" + work.language + "\" provided when trying to add work")
+    } else if (isNaN(Number(work.yearPublished))) {
+        throw new Error("Invalid year \"" + work.yearPublished + "\" published for work")
+    } else if (!validGenres.includes(work.genre)) {
+        throw new Error("Invalid genres \"" + work.genre + "\" provided when trying to add work")
+    } else if (!(authorExists)) {
+        throw new Error("Author \"" + work.author + "\" doesn't exist")
+    } else {
+        const authorID = await getIDByFieldValue(db, 'authors', 'name', work.author)
+        await db.execute(`INSERT INTO works (title, genre, language, year_published, author_id)
+                          VALUES ("${work.title}", "${work.genre}", "${work.language}", "${work.yearPublished}",
+                                  "${authorID}")`)
+    }
+}
+
+/**
  * Checks if a given table exists in given database
  * @param db database to check
  * @param table table name, case-sensitive
@@ -115,19 +166,33 @@ async function isValidTable(db: Database, table: String): Promise<boolean> {
 }
 
 /**
- * Checks if a given table has a given column
+ * Checks if a given table has a given field
  * @param db database containing table
  * @param table table to check
- * @param field the name of the column
+ * @param field the field to check for
  */
 async function isValidField(db: Database, table: String, field: String): Promise<boolean> {
-    try {
-        await db.select(`SELECT "${field}"
-                         FROM "${table}"`)
-        return true;
-    } catch (error: any) {
-        return false;
+    const dbSchema: { name: any }[] = await db.select(`PRAGMA table_info("${table}")`)
+    for (let i = 0; i < dbSchema.length; i++) {
+        if (dbSchema[i].name === field) {
+            return true
+        }
     }
+    return false
+}
+
+/**
+ * Checks if the given table has an element with that ID
+ * @param db database containing table
+ * @param table table to be checked
+ * @param id the id of the row
+ */
+async function isValidID(db: Database, table: String, id: number): Promise<boolean> {
+    const a: [] = await db.select(`SELECT *
+                                   FROM "${table}"
+                                   WHERE id = "${id}"`)
+    return a.length > 0
+
 }
 
 /**
@@ -138,17 +203,18 @@ async function isValidField(db: Database, table: String, field: String): Promise
  * @param fieldToChange the field to be changed
  * @param newValue the value to insert into the field
  */
-export async function updateEntryByID(db: Database, tableName: String, id: number, fieldToChange: String, newValue: String | number): Promise<void> {
+export async function updateEntryByID(db: Database, tableName: String, id: number, fieldToChange: string, newValue: String | number): Promise<void> {
     if (!(await isValidTable(db, tableName))) {
         throw new Error("Cannot find table \"" + tableName + "\" in the database")
-    } else if (await isValidField(db, tableName, fieldToChange)) {
-        throw new Error("Cannot find field name \"" + fieldToChange + "\" in the database")
+    } else if (!(await isValidField(db, tableName, fieldToChange))) {
+        throw new Error("Cannot find field \"" + fieldToChange + "\" in the database")
+    } else if (!(await isValidID(db, tableName, id))) {
+        throw new Error("Cannot find element with id \"" + id + "\" in the database")
     } else {
         await db.execute(`UPDATE "${tableName}"
                           SET "${fieldToChange}" = "${newValue}"
                           WHERE id = "${id}"`)
     }
-
 }
 
 /**
@@ -158,6 +224,9 @@ export async function updateEntryByID(db: Database, tableName: String, id: numbe
  * @param id id of row in table
  */
 export async function deleteEntryByID(db: Database, tableName: String, id: number): Promise<void> {
+    if (!(await isValidID(db, tableName, id))) {
+        throw new Error("No entry exists with id \"" + id + "\" in the table")
+    }
     await db.execute(`DELETE
                       FROM "${tableName}"
                       WHERE id = "${id}"`)
