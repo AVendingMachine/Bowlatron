@@ -38,11 +38,13 @@ const workAddForm = ref({
   yearPublished: 0,
   author: '',
 })
-const workChangeForm = ref({
-  title: '',
-  fieldName: '',
-  newValue: '' as any
-})
+/**
+ const workChangeForm = ref({
+ title: '',
+ fieldName: '',
+ newValue: '' as any
+ })
+ **/
 
 onMounted(async () => {
   db.value = await loadMainDatabase()
@@ -102,8 +104,10 @@ async function submitWorkAddForm() {
   }
 }
 
-async function submitWorkChangeForm() {
-}
+/**
+ async function submitWorkChangeForm() {
+ }
+ **/
 
 // AuthorQuestion-Related functions
 
