@@ -3,6 +3,7 @@ import Database from '@tauri-apps/plugin-sql'
 const validNationalities: String[] = ["American", "German"]
 const validLanguages: string[] = ["English", "Spanish", "Italian"]
 const validGenres: string[] = ["Poetry", "Long-Fiction"]
+const difficulties: string[] = ["Easy", "Medium", "Hard"]
 
 interface Author {
     name: String
@@ -16,6 +17,18 @@ interface Work {
     language: string
     yearPublished: number
     author: string
+}
+
+interface AuthorQuestion {
+    questionContent: string
+    difficulty: string
+    authorName: string
+}
+
+interface WorkQuestion {
+    questionContent: string
+    difficulty: string
+    workName: string
 }
 
 /**
@@ -48,9 +61,10 @@ export async function loadMainDatabase(): Promise<Database> {
     await db.execute(`CREATE TABLE IF NOT EXISTS authors_questions
                       (
                           id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                          weight     INTEGER NOT NULL,
                           difficulty TEXT    NOT NULL,
                           content    TEXT    NOT NULL,
-                          audio_path TEXT    NOT NULL,
+                          audio_path TEXT,
                           author_id  INTEGER NOT NULL,
                           FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
                       )
@@ -58,9 +72,10 @@ export async function loadMainDatabase(): Promise<Database> {
     await db.execute(`CREATE TABLE IF NOT EXISTS works_questions
                       (
                           id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                          weight     INTEGER NOT NULL,
                           difficulty TEXT    NOT NULL,
                           content    TEXT    NOT NULL,
-                          audio_path TEXT    NOT NULL,
+                          audio_path TEXT,
                           work_id    INTEGER NOT NULL,
                           FOREIGN KEY (work_id) REFERENCES works (id) ON DELETE CASCADE
                       )
@@ -147,6 +162,45 @@ export async function addWork(db: Database, work: Work): Promise<void> {
         await db.execute(`INSERT INTO works (title, genre, language, year_published, author_id)
                           VALUES ("${work.title}", "${work.genre}", "${work.language}", "${work.yearPublished}",
                                   "${authorID}")`)
+    }
+}
+
+/**
+ * Adds the specified question to the authors questions table
+ * @param db the database containing the table
+ * @param authorQuestion the question to add
+ */
+export async function addAuthorQuestion(db: Database, authorQuestion: AuthorQuestion): Promise<void> {
+    const authorExists: boolean = await entryExists(db, 'authors', 'name', authorQuestion.authorName)
+    if (!authorExists) {
+        throw new Error("Could not find author with name \"" + authorQuestion.authorName + "\"")
+    } else if (!difficulties.includes(authorQuestion.difficulty)) {
+        throw new Error("Invalid difficulty\"" + authorQuestion.difficulty + "\" please use Easy, Medium or Hard")
+    } else {
+        const authorID = await getIDByFieldValue(db, 'authors', 'name', authorQuestion.authorName)
+        await db.execute(`INSERT INTO authors_questions (weight, difficulty, content, audio_path, author_id)
+                          VALUES (0, "${authorQuestion.difficulty}", "${authorQuestion.questionContent}", NULL,
+                                  "${authorID}")`)
+    }
+}
+
+/**
+ * Attempts to add the specified work question to the works table
+ * @param db the database to insert into
+ * @param workQuestion the question to add
+ */
+export async function addWorkQuestion(db: Database, workQuestion: WorkQuestion): Promise<void> {
+    const workExists: boolean = await entryExists(db, 'works', 'title', workQuestion.workName)
+    if (!workExists) {
+        throw new Error("Could not find work with name \"" + workQuestion.workName + "\"")
+    } else if (!difficulties.includes(workQuestion.difficulty)) {
+        throw new Error("Invalid difficulty\"" + workQuestion.difficulty + "\" please use Easy, Medium or Hard")
+    } else {
+        const workID = await getIDByFieldValue(db, 'works', 'title', workQuestion.workName)
+        console.log("WorkID: " + workID)
+        await db.execute(`INSERT INTO works_questions (weight, difficulty, content, audio_path, work_id)
+                          VALUES (0, "${workQuestion.difficulty}", "${workQuestion.questionContent}", NULL,
+                                  "${workID}")`)
     }
 }
 
