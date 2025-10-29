@@ -1,7 +1,7 @@
 {
   "name": "bowlatron",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-sql": "^2.3.0",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "vue-select": "^4.0.0-beta.6"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

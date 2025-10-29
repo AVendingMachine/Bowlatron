@@ -9,6 +9,9 @@ import {deleteEntryByID} from "../functions/database-methods.ts";
 import {getIDByFieldValue} from "../functions/database-methods.ts";
 import {addAuthorQuestion} from "../functions/database-methods.ts";
 import {addWorkQuestion} from "../functions/database-methods.ts";
+//@ts-ignore
+import VSelect from "vue-select";
+
 
 // Generic
 const db = ref()
@@ -280,6 +283,7 @@ async function submitFieldDeletionForm(tableName: String) {
       <button @click="reloadAuthorsTable()">Refresh DB</button>
       <br>
       <table>
+        <tbody>
         <tr>
           <th>id</th>
           <th>Name</th>
@@ -292,17 +296,24 @@ async function submitFieldDeletionForm(tableName: String) {
           <td>{{ author.nationality }}</td>
           <td>{{ toValidYear(author.birth_year) }}</td>
         </tr>
+        </tbody>
       </table>
     </div>
     <div v-if="viewSelected == 'works'" class="WorksDatabase">
       <h2>Works</h2>
       <p class="error">{{ errorMessage }}</p>
-      <p>Add Work</p>
-      <span>Title:</span><input v-model="workAddForm.title"><br>
-      <span>Genre:</span><input v-model="workAddForm.genre"><br>
-      <span>Language:</span><input v-model="workAddForm.language"><br>
-      <span>Year Published:</span><input v-model="workAddForm.yearPublished"><br>
-      <span>Author:</span><input v-model="workAddForm.author"><br>
+      <h3>Add Work</h3>
+      <p>Title</p>
+      <input v-model="workAddForm.title"><br>
+      <p>Genre:</p>
+      <input v-model="workAddForm.genre"><br>
+      <p>Language:</p>
+      <input v-model="workAddForm.language"><br>
+      <p>Year Published:</p>
+      <input v-model="workAddForm.yearPublished"><br>
+      <p>Author:</p>
+      <v-select class="dropdownSelect" v-model="workAddForm.author" label="name" :reduce="authorsTable => authorsTable.name" :options="authorsTable">GUG</v-select>
+      <br>
       <button @click="submitWorkAddForm">submit</button>
       <br>
       <p>Edit Work</p>
@@ -316,6 +327,7 @@ async function submitFieldDeletionForm(tableName: String) {
       <br><br>
       <button @click="reloadWorksTable">Refresh DB</button>
       <table>
+        <tbody>
         <tr>
           <th>id</th>
           <th>Title</th>
@@ -332,6 +344,7 @@ async function submitFieldDeletionForm(tableName: String) {
           <td> {{ toValidYear(work.year_published) }}</td>
           <td>{{ work.author_id }}</td>
         </tr>
+        </tbody>
       </table>
     </div>
     <div v-if="viewSelected == 'authors_questions'" class="AuthorsQuestionsDatabase">
@@ -353,6 +366,7 @@ async function submitFieldDeletionForm(tableName: String) {
       <button @click="reloadAuthorQuestionsTable">Reload DB</button>
       <br>
       <table>
+        <tbody>
         <tr>
           <th>id</th>
           <th>Weight</th>
@@ -367,6 +381,7 @@ async function submitFieldDeletionForm(tableName: String) {
           <td>{{ authorQuestion.content }}</td>
           <td>{{ authorQuestion.author_id }}</td>
         </tr>
+        </tbody>
       </table>
     </div>
     <div v-if="viewSelected == 'works_questions'" class="WorksQuestionsDatabase">
@@ -388,6 +403,7 @@ async function submitFieldDeletionForm(tableName: String) {
       <button @click="reloadWorkQuestionsTable">Reload DB</button>
       <br>
       <table>
+        <tbody>
         <tr>
           <th>id</th>
           <th>Weight</th>
@@ -402,6 +418,7 @@ async function submitFieldDeletionForm(tableName: String) {
           <td>{{ workQuestion.content }}</td>
           <td>{{ workQuestion.work_id }}</td>
         </tr>
+        </tbody>
       </table>
     </div>
     <div v-if="viewSelected == 'master_database'">
@@ -412,6 +429,11 @@ async function submitFieldDeletionForm(tableName: String) {
 </template>
 
 <style scoped>
+@font-face {
+  font-family: 'Open-Sans';
+  src: url('../assets/fonts/opensans-webfont.woff');
+}
+
 table, td, th {
   border: 1px solid whitesmoke;
   border-collapse: collapse;
@@ -431,6 +453,43 @@ td, th {
 
 textarea {
   resize: none;
+}
+
+:deep() {
+  --vs-controls-color: #ffffff;
+  --vs-border-color: #ffffff;
+  --vs-dropdown-bg: #ffffff;
+  --vs-dropdown-color: #ffffff;
+  --vs-dropdown-option-color: #000000;
+  --vs-dropdown-option--active-bg: #5897fb;
+  --vs-selected-bg: #000000;
+  --vs-selected-color: #eeeeee;
+  --vs-search-input-color: #eeeeee;
+  --vs-search-input-bg: rgb(255, 255, 255);
+  --vs-dropdown-option--active-color: #eeeeee;
+  --vs-border-radius: 0;
+  --vs-selected-border-width: var(0);
+}
+
+input:focus {
+  outline: none;
+}
+
+.dropdownSelect {
+  width: 10rem;
+}
+
+input {
+  border: 1px solid var(--vs-controls-color);
+  background-color: rgba(0,0,0,0);
+  color: var(--vs-controls-color);
+  font-size: var(--vs-font-size);
+  line-height: var(--vs-line-height);
+  font-family: Open-Sans, sans-serif;
+  padding-left: 10px;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  width: 10rem;
 }
 
 </style>
