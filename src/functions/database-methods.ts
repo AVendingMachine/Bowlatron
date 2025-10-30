@@ -1,9 +1,9 @@
 import Database from '@tauri-apps/plugin-sql'
 
-const validNationalities: String[] = ["American", "German"]
-const validLanguages: string[] = ["English", "Spanish", "Italian"]
-const validGenres: string[] = ["Poetry", "Long-Fiction"]
-const difficulties: string[] = ["Easy", "Medium", "Hard"]
+export const validNationalities: String[] = ["American", "German"]
+export const validLanguages: string[] = ["English", "Spanish", "Italian"]
+export const validGenres: string[] = ["Poetry", "Long-Fiction"]
+export const difficulties: string[] = ["Easy", "Medium", "Hard"]
 
 interface Author {
     name: String
