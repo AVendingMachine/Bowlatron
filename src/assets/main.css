@@ -40,7 +40,9 @@ body {
 }
 
 main {
-    padding: 1rem 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1rem;
 }
 
 a {
@@ -112,7 +114,8 @@ input:focus {
 }
 
 .navbar a {
-    padding: .5rem .5rem;
+    padding: 1rem 1rem;
+    vertical-align: middle;
 }
 
 .NavigationView {
@@ -133,4 +136,8 @@ input:focus {
     font-weight: bold;
     background-color: var(--background-color);
     padding: 16px;
+}
+
+.logo {
+    height: 24px;
 }

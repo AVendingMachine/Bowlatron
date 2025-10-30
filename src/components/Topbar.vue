@@ -1,14 +1,14 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 
 </script>
 
 <template>
   <body>
-  <main class="navbar">
-    <RouterLink to="/">Home</RouterLink>
+  <header class="navbar">
+    <RouterLink to="/"><img alt="logo" class="logo" src="../../src-tauri/icons/64x64.png"></RouterLink>
     <RouterLink to="/SecondView">Second</RouterLink>
     <RouterLink to="/DatabaseWriterView">Database</RouterLink>
-  </main>
+  </header>
   </body>
 </template>
 
