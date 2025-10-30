@@ -176,6 +176,7 @@ async function submitAuthorQuestionsAddForm() {
   errorMessage.value = ""
   try {
     await addAuthorQuestion(db.value, authorQuestionsAddForm.value)
+    await reloadAuthorQuestionsTable()
   } catch (error: any) {
     errorMessage.value = error.message
   }
@@ -188,6 +189,7 @@ async function submitAuthorQuestionsChangeForm() {
   try {
     await updateEntryByID(db.value, 'authors_questions', authorQuestionsChangeForm.value.id,
         authorQuestionsChangeForm.value.fieldName, authorQuestionsChangeForm.value.newValue)
+    await reloadAuthorQuestionsTable()
   } catch (error: any) {
     errorMessage.value = error.message
   }
@@ -360,7 +362,8 @@ async function submitFieldDeletionForm(tableName: String) {
           <p>Year Published:</p>
           <input v-model="workAddForm.yearPublished"><br>
           <p>Author</p>
-          <v-select v-model="workAddForm.author" :options="authorsTable" :reduce="authorsTable => authorsTable.name"
+          <v-select v-model="workAddForm.author" :options="authorsTable"
+                    :reduce="(authorsTable:any) => authorsTable.name"
                     class="dropdownSelect" label="name"></v-select>
           <br>
           <button @click="submitWorkAddForm">submit</button>
@@ -425,7 +428,7 @@ async function submitFieldDeletionForm(tableName: String) {
                     class="dropdownSelect"></v-select>
           <p>Author</p>
           <v-select v-model="authorQuestionsAddForm.authorName" :options="authorsTable"
-                    :reduce="authorsTable => authorsTable.name"
+                    :reduce="(authorsTable:any) => authorsTable.name"
                     class="dropdownSelect" label="name"></v-select>
           <br>
           <button @click="submitAuthorQuestionsAddForm">submit</button>
@@ -488,7 +491,7 @@ async function submitFieldDeletionForm(tableName: String) {
                     class="dropdownSelect"></v-select>
           <p>Work</p>
           <v-select v-model="worksQuestionsAddForm.workName" :options="worksTable"
-                    :reduce="worksTable => worksTable.title"
+                    :reduce="(worksTable:any) => worksTable.title"
                     class="dropdownSelect" label="title"></v-select>
           <br>
           <button @click="submitWorkQuestionsAddForm">submit</button>
