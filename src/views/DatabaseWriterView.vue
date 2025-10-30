@@ -270,7 +270,7 @@ async function submitFieldDeletionForm(tableName: String) {
 <template>
   <body>
   <header>
-    <h1>Database Writer!</h1>
+    <h1>Database</h1>
   </header>
   <main>
     <div class="Navigate">
@@ -282,7 +282,7 @@ async function submitFieldDeletionForm(tableName: String) {
     <div v-if="viewSelected == 'authors'" class="NavigationView">
       <div class="Forms">
         <h2>Authors</h2>
-        <p class="error">{{ errorMessage }}</p>
+        <p v-if="errorMessage != ''" class="error">{{ errorMessage }}</p>
         <div class="Navigate">
           <button @click="actionSelected = 'add'">Add</button>
           <button @click="actionSelected = 'edit'">Edit</button>
@@ -343,7 +343,7 @@ async function submitFieldDeletionForm(tableName: String) {
     <div v-if="viewSelected == 'works'" class="NavigationView">
       <div class="Forms">
         <h2>Works</h2>
-        <p class="error">{{ errorMessage }}</p>
+        <p v-if="errorMessage != ''" class="error">{{ errorMessage }}</p>
         <div class="Navigate">
           <button @click="actionSelected = 'add'">Add</button>
           <button @click="actionSelected = 'edit'">Edit</button>
@@ -410,7 +410,7 @@ async function submitFieldDeletionForm(tableName: String) {
     <div v-if="viewSelected == 'authors_questions'" class="NavigationView">
       <div class="Forms">
         <h2>Authors Questions</h2>
-        <p class="error">{{ errorMessage }}</p>
+        <p v-if="errorMessage != ''" class="error">{{ errorMessage }}</p>
         <div class="Navigate">
           <button @click="actionSelected = 'add'">Add</button>
           <button @click="actionSelected = 'edit'">Edit</button>
@@ -473,7 +473,7 @@ async function submitFieldDeletionForm(tableName: String) {
     <div v-if="viewSelected == 'works_questions'" class="NavigationView">
       <div class="Forms">
         <h2>Works Questions</h2>
-        <p class="error">{{ errorMessage }}</p>
+        <p v-if="errorMessage != ''" class="error">{{ errorMessage }}</p>
         <div class="Navigate">
           <button @click="actionSelected = 'add'">Add</button>
           <button @click="actionSelected = 'edit'">Edit</button>
@@ -538,80 +538,5 @@ async function submitFieldDeletionForm(tableName: String) {
 </template>
 
 <style scoped>
-@font-face {
-  font-family: 'Open-Sans';
-  src: url('../assets/fonts/opensans-webfont.woff');
-}
-
-table, td, th {
-  border: 1px solid whitesmoke;
-  border-collapse: collapse;
-}
-
-.error {
-  color: red;
-  font-weight: bold;
-  background-color: white;
-  padding: 16px;
-}
-
-td, th {
-  padding: 10px;
-  max-width: 20rem;
-}
-
-textarea {
-  resize: none;
-}
-
-:deep() {
-  --vs-controls-color: #ffffff;
-  --vs-border-color: #ffffff;
-  --vs-dropdown-bg: #ffffff;
-  --vs-dropdown-color: #ffffff;
-  --vs-dropdown-option-color: #000000;
-  --vs-dropdown-option--active-bg: #5897fb;
-  --vs-selected-bg: #000000;
-  --vs-selected-color: #eeeeee;
-  --vs-search-input-color: #eeeeee;
-  --vs-search-input-bg: rgb(255, 255, 255);
-  --vs-dropdown-option--active-color: #eeeeee;
-  --vs-border-radius: 0;
-  --vs-selected-border-width: var(0);
-}
-
-input:focus textarea:focus {
-  outline: none;
-}
-
-.NavigationView {
-  display: flex;
-}
-
-.NavigationView > * {
-  width: 100%;
-  margin: 1rem;
-}
-
-table {
-  width: 100%;
-}
-
-.dropdownSelect {
-  width: 11rem;
-}
-
-input {
-  border: 1px solid var(--vs-controls-color);
-  background-color: rgba(0, 0, 0, 0);
-  color: var(--vs-controls-color);
-  font-size: var(--vs-font-size);
-  line-height: var(--vs-line-height);
-  font-family: Open-Sans, sans-serif;
-  padding-left: 10px;
-  padding-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  width: 10rem;
-}
 
 </style>
