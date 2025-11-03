@@ -1,6 +1,6 @@
 # Bowlatron
 
-An application for practicing Quizbowl Literature topics centered _you_ writing your own questions
+An application for practicing Quizbowl Literature topics centered around _you_ writing your own questions
 
 - You input the clues
 - Bowlatron makes the questions
