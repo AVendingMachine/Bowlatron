@@ -6,7 +6,7 @@
   <body>
   <header class="navbar">
     <RouterLink to="/"><img alt="logo" class="logo" src="../../src-tauri/icons/64x64.png"></RouterLink>
-    <RouterLink to="/SecondView">Second</RouterLink>
+    <RouterLink to="/SecondView">Reader</RouterLink>
     <RouterLink to="/DatabaseWriterView">Database</RouterLink>
   </header>
   </body>
