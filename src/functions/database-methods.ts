@@ -251,7 +251,6 @@ async function isValidID(db: Database, table: String, id: number): Promise<boole
                                    FROM "${table}"
                                    WHERE id = "${id}"`)
     return a.length > 0
-
 }
 
 /**
@@ -289,4 +288,40 @@ export async function deleteEntryByID(db: Database, tableName: String, id: numbe
     await db.execute(`DELETE
                       FROM "${tableName}"
                       WHERE id = "${id}"`)
+}
+
+/**
+ * Gets a random question for the given author of the given difficulty
+ * @param db database to check
+ * @param author the ID of the author
+ * @param difficultyName difficulty of the question (also case-sensitive!)
+ */
+export async function getRandomQuestionByAuthor(db: Database, authorID: number, difficultyName: string): Promise<{
+    content: string,
+    difficulty: string
+}> {
+    const row: { content: string, difficulty: string }[] =
+        await db.select(`SELECT *
+                         FROM authors_questions
+                         WHERE difficulty = "${difficultyName}"
+                           AND author_id = "${authorID}"
+                         ORDER BY RANDOM()
+                         LIMIT 1`)
+    if (row.length != 0) {
+        return row[0]
+    }
+    return {content: "!No \"" + difficultyName + "\" difficulty question implemented!", difficulty: difficultyName}
+}
+
+/**
+ * Returns a random id of a valid author
+ * @param db the database to check
+ */
+export async function getRandomAuthor(db: Database): Promise<number> {
+    const row: { id: number }[] =
+        await db.select(`SELECT *
+                         FROM authors
+                         ORDER BY RANDOM()
+                         LIMIT 1`)
+    return row[0].id
 }
