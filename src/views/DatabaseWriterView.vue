@@ -33,7 +33,8 @@ const authorsTable = ref()
 const authorAddForm = ref({
   name: '',
   nationality: '',
-  birthYear: 0
+  birthYear: 0,
+  answerLine: ''
 })
 const authorChangeForm = ref({
   name: '',
@@ -48,7 +49,8 @@ const workAddForm = ref({
   genre: '',
   language: '',
   yearPublished: 0,
-  author: '',
+  answerLine: '',
+  author: ''
 })
 const workChangeForm = ref({
   title: '',
@@ -298,6 +300,8 @@ async function submitFieldDeletionForm(tableName: String) {
           <v-select v-model="authorAddForm.nationality" :options="validNationalities" class="dropdownSelect"></v-select>
           <p>Birth Year</p>
           <input v-model="authorAddForm.birthYear"><br>
+          <p>Answer Line</p>
+          <input v-model="authorAddForm.answerLine"><br>
           <br>
           <button @click="submitAuthorAddForm">submit</button>
         </div>
@@ -331,12 +335,14 @@ async function submitFieldDeletionForm(tableName: String) {
             <th>Name</th>
             <th>Nationality</th>
             <th>Birth Year</th>
+            <th>Answer Line</th>
           </tr>
           <tr v-for="author in authorsTable">
             <td>{{ author.id }}</td>
             <td>{{ author.name }}</td>
             <td>{{ author.nationality }}</td>
             <td>{{ toValidYear(author.birth_year) }}</td>
+            <td>{{ author.answer_line }}</td>
           </tr>
           </tbody>
         </table>
@@ -365,6 +371,8 @@ async function submitFieldDeletionForm(tableName: String) {
           <v-select v-model="workAddForm.author" :options="authorsTable"
                     :reduce="(authorsTable:any) => authorsTable.name"
                     class="dropdownSelect" label="name"></v-select>
+          <p>Answer Line</p>
+          <input v-model="workAddForm.answerLine"><br>
           <br>
           <button @click="submitWorkAddForm">submit</button>
         </div>
@@ -397,6 +405,7 @@ async function submitFieldDeletionForm(tableName: String) {
             <th>Language</th>
             <th>Year Published</th>
             <th>Author</th>
+            <th>Answer Line</th>
           </tr>
           <tr v-for="work in worksTable">
             <td>{{ work.id }}</td>
@@ -405,6 +414,7 @@ async function submitFieldDeletionForm(tableName: String) {
             <td>{{ work.language }}</td>
             <td> {{ toValidYear(work.year_published) }}</td>
             <td>{{ work.author_id }}</td>
+            <td>{{ work.answer_line }}</td>
           </tr>
           </tbody>
         </table>

@@ -9,6 +9,7 @@ interface Author {
     name: String
     nationality: String
     birthYear: number
+    answerLine: string
 }
 
 interface Work {
@@ -16,6 +17,7 @@ interface Work {
     genre: string
     language: string
     yearPublished: number
+    answerLine: string
     author: string
 }
 
@@ -44,7 +46,8 @@ export async function loadMainDatabase(): Promise<Database> {
                           id          INTEGER PRIMARY KEY AUTOINCREMENT,
                           name        TEXT NOT NULL,
                           nationality TEXT NOT NULL,
-                          birth_year  INTEGER
+                          birth_year  INTEGER,
+                          answer_line TEXT NOT NULL
                       )
     `)
     await db.execute(`CREATE TABLE IF NOT EXISTS works
@@ -54,6 +57,7 @@ export async function loadMainDatabase(): Promise<Database> {
                           genre          TEXT    NOT NULL,
                           language       TEXT    NOT NULL,
                           year_published INTEGER,
+                          answer_line    TEXT    NOT NULL,
                           author_id      INTEGER NOT NULL,
                           FOREIGN KEY (author_id) REFERENCES authors (id) ON DELETE CASCADE
                       )
@@ -136,8 +140,9 @@ export async function addAuthor(db: Database, author: Author): Promise<void> {
     } else if (isNaN(Number(author.birthYear))) {
         throw new Error("Invalid birth year \"" + author.birthYear + "\" provided when trying to add author")
     } else {
-        await db.execute(`INSERT INTO authors (name, nationality, birth_year)
-                          VALUES ("${author.name}", "${author.nationality}", "${author.birthYear}")`)
+        await db.execute(`INSERT INTO authors (name, nationality, birth_year, answer_line)
+                          VALUES ("${author.name}", "${author.nationality}", "${author.birthYear}",
+                                  "${author.answerLine}")`)
     }
 
 }
@@ -154,14 +159,14 @@ export async function addWork(db: Database, work: Work): Promise<void> {
     } else if (isNaN(Number(work.yearPublished))) {
         throw new Error("Invalid year \"" + work.yearPublished + "\" published for work")
     } else if (!validGenres.includes(work.genre)) {
-        throw new Error("Invalid genres \"" + work.genre + "\" provided when trying to add work")
+        throw new Error("Invalid genre \"" + work.genre + "\" provided when trying to add work")
     } else if (!(authorExists)) {
         throw new Error("Author \"" + work.author + "\" doesn't exist")
     } else {
         const authorID = await getIDByFieldValue(db, 'authors', 'name', work.author)
-        await db.execute(`INSERT INTO works (title, genre, language, year_published, author_id)
+        await db.execute(`INSERT INTO works (title, genre, language, year_published, answer_line, author_id)
                           VALUES ("${work.title}", "${work.genre}", "${work.language}", "${work.yearPublished}",
-                                  "${authorID}")`)
+                                  "${work.answerLine}", "${authorID}")`)
     }
 }
 
