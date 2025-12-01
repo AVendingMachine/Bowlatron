@@ -318,10 +318,71 @@ export async function getRandomQuestionByAuthor(db: Database, authorID: number, 
  * @param db the database to check
  */
 export async function getRandomAuthor(db: Database): Promise<number> {
-    const row: { id: number }[] =
+    try {
+        const row: { id: number }[] =
+            await db.select(`SELECT *
+                             FROM authors
+                             ORDER BY RANDOM()
+                             LIMIT 1`)
+        return row[0].id
+    } catch (error) {
+        console.error("Could not find a random author!")
+        return -1
+    }
+}
+
+/**
+ * Returns a random question of a given work at a given difficulty
+ * @param db database to check in
+ * @param workID the id of the work
+ * @param difficultyName name of the difficulty (case-sensitive!)
+ */
+export async function getRandomQuestionByWork(db: Database, workID: number, difficultyName: string): Promise<{
+    content: string,
+    difficulty: string
+}> {
+    const row: { content: string, difficulty: string }[] =
         await db.select(`SELECT *
-                         FROM authors
+                         FROM works_questions
+                         WHERE difficulty = "${difficultyName}"
+                           AND work_id = "${workID}"
                          ORDER BY RANDOM()
                          LIMIT 1`)
-    return row[0].id
+    if (row.length != 0) {
+        return row[0]
+    }
+    return {content: "!No \"" + difficultyName + "\" difficulty question implemented!", difficulty: difficultyName}
+}
+
+/**
+ * Returns the ID of a random work
+ * @param db database to check in
+ */
+export async function getRandomWork(db: Database): Promise<number> {
+    try {
+        const row: { id: number }[] =
+            await db.select(`SELECT *
+                             FROM works
+                             ORDER BY RANDOM()
+                             LIMIT 1`)
+        return row[0].id
+    } catch (error) {
+        console.error("Could not find a random work!")
+        return -1
+    }
+}
+
+export async function getAnswerLine(db: Database, id: number, table: string): Promise<string> {
+    try {
+        const row: { answer_line: string }[] =
+            await db.select(`SELECT *
+                             FROM "${table}"
+                             WHERE id = "${id}"
+                             LIMIT 1`)
+        return row[0].answer_line
+    } catch (error) {
+        console.error("Could not find an answer line!")
+        return "UNKNOWN ANSWER LINE"
+    }
+
 }
