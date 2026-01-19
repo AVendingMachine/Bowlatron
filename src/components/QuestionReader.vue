@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue';
+import {nextTick, onMounted, onUnmounted, ref} from 'vue';
 import {
   getAnswerLine,
   getRandomAuthor,
@@ -15,6 +15,13 @@ const showAnswerBox = ref(false);
 const answerBox = ref("");
 const authorsQuestionsEnabled = ref(true)
 const worksQuestionsEnabled = ref(true)
+const answerBoxThing = ref(HTMLInputElement)
+const clock = ref(0.0);
+const score = ref(0);
+const visibleAnswerLine = ref("")
+let showAnswerLine = false;
+let isTakingAnswer = false;
+let isReading = false;
 let answerLine = "Jabberwocky"
 let removeEnterKeyHandler: Function;
 let paused = false;
@@ -23,7 +30,44 @@ let currentRunNumber = 0;
 
 onMounted(async () => {
   db.value = await loadMainDatabase()
+  window.addEventListener("keydown", keyControl)
 })
+
+onUnmounted(async () => {
+  window.removeEventListener("keydown", keyControl)
+  stop()
+})
+
+async function startTimer(time: number) {
+  clock.value = time;
+  while (clock.value > 0 && isTakingAnswer) {
+    await delay(100);
+    clock.value = +(clock.value - 0.1).toFixed(1)
+  }
+  clock.value = 0;
+}
+
+function keyControl(event: KeyboardEvent): void {
+  if (isTakingAnswer) {
+    return
+  }
+  switch (event.key) {
+    case "n":
+    case "s":
+      start()
+      break;
+    case " ":
+      buzz(5, true)
+      break;
+    case "p":
+      if (!paused) {
+        pause()
+      } else {
+        resume()
+      }
+      break;
+  }
+}
 
 /**
  * Reads out a question until interrupted
@@ -35,13 +79,21 @@ onMounted(async () => {
  * @param runNumber the ID of the current question run
  */
 async function readTextUntilInterrupted(easyText: string, mediumText: string, hardText: string, delayBetweenWords: number, delayBetweenQuestions: number, runNumber: number): Promise<void> {
+  console.log("Started Reading Run " + runNumber + ", current run number is " + currentRunNumber);
+  isReading = true;
+  showAnswerLine = false;
   let easyWords: string[] = easyText.split(' ').reverse()
   let mediumWords: string[] = mediumText.split(' ').reverse()
   let hardWords: string[] = hardText.split(' ').reverse()
   await readLine(easyWords, delayBetweenWords, delayBetweenQuestions, false, runNumber)
   await readLine(mediumWords, delayBetweenWords, delayBetweenQuestions, false, runNumber)
   await readLine(hardWords, delayBetweenWords, delayBetweenQuestions, true, runNumber)
-  console.log("FINISHED READING")
+  await buzz(10, false);
+  showAnswerLine = true;
+  console.log("Finished Reading Run " + runNumber + ", current run number is " + currentRunNumber);
+  if (runNumber === currentRunNumber) {
+    isReading = false;
+  }
 }
 
 /**
@@ -98,16 +150,27 @@ function resume() {
  */
 function stop() {
   currentRunNumber++
+  isReading = false;
   resumeCallback?.()
 }
 
 /**
  * Interrupts the current text operation and asks for an answer
  */
-async function buzz() {
+async function buzz(answerTime: number, hasPenalty: boolean): Promise<void> {
+  if (!isReading) {
+    console.log("Cannot buzz when a question is not being read!")
+    return;
+  }
+
   pause()
+  isTakingAnswer = true
   showAnswerBox.value = true
-  await handleAnswer()
+  await nextTick(() => {
+    answerBoxThing.value!.focus()
+  })
+  //await startTimer()
+  await handleAnswer(answerTime, hasPenalty)
 }
 
 /**
@@ -134,24 +197,28 @@ async function waitForEnterKey() {
  * put in the box is correct after that 5 seconds or enter is pressed, stops
  * the question / keeps going if its wrong
  */
-async function handleAnswer() {
-  await Promise.race([delay(5000), waitForEnterKey()])
+async function handleAnswer(answerTime: number, hasPenalty: boolean): Promise<void> {
+  console.log("HANDLING ANSWER")
+  await Promise.race([startTimer(answerTime), waitForEnterKey()])
   removeEnterKeyHandler();
   showAnswerBox.value = false
-  if (answerBox.value === answerLine) {
+  if (sanitizeInput(answerBox.value) === answerLine) {
     console.log("Correct answer")
+    score.value += 10;
     console.log("answerLine: " + answerLine);
-    console.log("answerBox.value: " + answerBox.value);
+    console.log("answerBox.value: " + sanitizeInput(answerBox.value));
+    answerLine = ""
     resume()
     stop()
   } else {
     console.log("Incorrect answer")
+    if (score.value > 0 && hasPenalty) score.value -= 5
     console.log("answerLine: " + answerLine);
-    console.log("answerBox.value: " + answerBox.value);
+    console.log("answerBox.value: " + sanitizeInput(answerBox.value));
     resume()
   }
   answerBox.value = "";
-  answerLine = ""
+  isTakingAnswer = false
 }
 
 /**
@@ -204,19 +271,70 @@ async function start(): Promise<void> {
   await readTextUntilInterrupted(easyRow.content, mediumRow.content, hardRow.content, 500, 2000, runNumber)
 }
 
+function sanitizeInput(input: string): string {
+  const newString: string = input.replaceAll(" ", "").toLowerCase();
+  return newString;
+}
+
 </script>
 
 <template>
-  <button @click="start">start</button>
-  <p> {{ answerBox }}</p>
-  <p> {{ displayText }}</p>
-  <input v-if="showAnswerBox" v-model="answerBox"><br>
-  <button @click="resume">resume</button>
-  <button @click="pause">pause</button>
-  <button @click="stop">stop</button>
-  <button @click="buzz">buzz</button>
+  <main>
+    <div class="scorebar">
+      <p>Score: {{ score }}</p>
+    </div>
+    <div class="playArea">
+      <div class="main">
+        <button @click="start">start</button>
+        <button @click="resume">resume</button>
+        <button @click="pause">pause</button>
+        <button @click="stop">stop</button>
+        <button class="rightButtons" @click="buzz">buzz</button>
+        <p> {{ answerBox }}</p>
+        <p> {{ displayText }}</p>
+        <input v-if="showAnswerBox" ref="answerBoxThing" v-model="answerBox"><br>
+        <p v-if="showAnswerLine"> {{ visibleAnswerLine }}</p>
+
+      </div>
+      <div class="sideBar">
+        <p class="timer"> {{ clock }}</p>
+      </div>
+    </div>
+
+  </main>
 </template>
 
 <style scoped>
+main {
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  width: 90%;
+  padding: 2rem;
+}
+
+.playArea {
+  display: flex;
+  flex-direction: row;
+}
+
+.sideBar {
+  width: 10%;
+}
+
+.timer {
+  text-align: center;
+  font-size: 2rem;
+  background: lightgray;
+  padding: 1rem;
+}
+
+.scorebar {
+  background-color: lightgray;
+  padding-left: 1rem;
+}
+
 
 </style>

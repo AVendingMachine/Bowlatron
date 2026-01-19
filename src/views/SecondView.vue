@@ -4,8 +4,10 @@ import QuestionReader from "../components/QuestionReader.vue";
 </script>
 
 <template>
-  <h1>Reader</h1>
-  <QuestionReader/>
+  <main>
+    <QuestionReader/>
+  </main>
+
 </template>
 
 <style scoped>

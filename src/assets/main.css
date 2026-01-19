@@ -39,11 +39,6 @@ body {
     --vs-border-width: var(--border-width);
 }
 
-main {
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: 1rem;
-}
 
 a {
     text-decoration: none;
